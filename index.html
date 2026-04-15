@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assistant Daily Checklist</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f5f2;
+    --card: #ffffff;
+    --border: #e2ddd8;
+    --text: #1a1714;
+    --muted: #8a8278;
+    --accent: #2d6a4f;
+    --accent-light: #e8f4ef;
+    --accent-hover: #235c43;
+    --danger: #c0392b;
+    --radius: 10px;
+    --shadow: 0 2px 16px rgba(0,0,0,0.07);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 40px 16px 80px; }
+  .wrapper { max-width: 680px; margin: 0 auto; }
+  .header { margin-bottom: 36px; }
+  .header h1 { font-family: 'DM Serif Display', serif; font-size: 28px; font-weight: 400; line-height: 1.2; margin-bottom: 8px; }
+  .header p { font-size: 13px; color: var(--muted); font-weight: 300; }
+  .divider { height: 1px; background: var(--border); margin-bottom: 28px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; margin-bottom: 16px; box-shadow: var(--shadow); }
+  .field-label { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 10px; display: block; }
+  input[type="date"], input[type="text"] { width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 7px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text); background: #fdfcfb; transition: border-color 0.2s; outline: none; appearance: none; }
+  input[type="date"]:focus, input[type="text"]:focus { border-color: var(--accent); }
+  .location-group { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 4px; }
+  .location-option { display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 9px 16px; border: 1.5px solid var(--border); border-radius: 7px; font-size: 14px; font-weight: 500; transition: all 0.15s; user-select: none; background: #fdfcfb; }
+  .location-option input[type="radio"] { display: none; }
+  .location-option .check-box { width: 17px; height: 17px; border: 2px solid var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; }
+  .location-option:has(input:checked) { border-color: var(--accent); background: var(--accent-light); color: var(--accent); }
+  .location-option:has(input:checked) .check-box { background: var(--accent); border-color: var(--accent); }
+  .location-option:has(input:checked) .check-box::after { content: ''; width: 6px; height: 6px; background: white; border-radius: 50%; display: block; }
+  .section-title { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin: 28px 0 12px; }
+  .question-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 22px; margin-bottom: 8px; box-shadow: var(--shadow); }
+  .question-card:has(input:checked) { border-color: #c8dfd4; }
+  .question-text { font-size: 14px; font-weight: 500; color: var(--text); line-height: 1.55; margin-bottom: 12px; }
+  .yn-group { display: flex; gap: 10px; }
+  .yn-option { display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px 20px; border: 1.5px solid var(--border); border-radius: 7px; font-size: 13px; font-weight: 500; transition: all 0.15s; user-select: none; background: #fdfcfb; min-width: 80px; }
+  .yn-option input[type="radio"] { display: none; }
+  .yn-dot { width: 16px; height: 16px; border: 2px solid var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; }
+  .yn-option:has(input:checked) { border-color: var(--accent); background: var(--accent-light); color: var(--accent); }
+  .yn-option:has(input:checked) .yn-dot { background: var(--accent); border-color: var(--accent); }
+  .yn-option:has(input:checked) .yn-dot::after { content: ''; width: 6px; height: 6px; background: white; border-radius: 50%; display: block; }
+  .upload-zone { border: 2px dashed var(--border); border-radius: 8px; padding: 28px; text-align: center; background: #fdfcfb; cursor: pointer; transition: all 0.2s; position: relative; }
+  .upload-zone:hover { border-color: var(--accent); background: var(--accent-light); }
+  .upload-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .upload-icon { width: 40px; height: 40px; background: var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 18px; }
+  .upload-text { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+  .upload-hint { font-size: 12px; color: var(--muted); }
+  .file-list { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+  .file-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--accent-light); border-radius: 6px; font-size: 13px; color: var(--accent); }
+  .file-item span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .file-remove { cursor: pointer; color: var(--muted); font-size: 16px; line-height: 1; padding: 0 2px; flex-shrink: 0; }
+  .file-remove:hover { color: var(--danger); }
+  .notice { background: #fef9ec; border: 1px solid #f0d78c; border-radius: var(--radius); padding: 16px 20px; font-size: 13px; font-weight: 500; color: #7a5a0a; margin-bottom: 24px; line-height: 1.5; }
+  .submit-btn { width: 100%; padding: 15px; background: var(--accent); color: white; border: none; border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.2s, transform 0.1s; }
+  .submit-btn:hover { background: var(--accent-hover); }
+  .submit-btn:active { transform: scale(0.99); }
+  .submit-btn:disabled { background: #aaa; cursor: not-allowed; }
+  .success-screen { display: none; text-align: center; padding: 60px 20px; }
+  .success-screen.show { display: block; }
+  .success-icon { width: 64px; height: 64px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 28px; color: white; }
+  .success-screen h2 { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; margin-bottom: 10px; }
+  .success-screen p { color: var(--muted); font-size: 14px; }
+  .form-wrap.hidden { display: none; }
+  .error-msg { background: #fdecea; border: 1px solid #f5b7b1; color: var(--danger); border-radius: 7px; padding: 12px 16px; font-size: 13px; margin-top: 12px; display: none; }
+  .error-msg.show { display: block; }
+  @media (max-width: 500px) {
+    .card, .question-card { padding: 18px; }
+    .header h1 { font-size: 22px; }
+    .yn-option { min-width: 70px; padding: 8px 14px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="form-wrap" id="formWrap">
+    <div class="header">
+      <h1>Assistant Daily Checklist</h1>
+      <p>Please complete all fields before submitting.</p>
+    </div>
+    <div class="divider"></div>
+
+    <div class="card">
+      <label class="field-label" for="date">Date</label>
+      <input type="date" id="date" name="date" required>
+      <div style="height:20px"></div>
+      <label class="field-label" for="staffName">Staff Name</label>
+      <input type="text" id="staffName" name="staffName" placeholder="Full Name" required>
+      <div style="height:20px"></div>
+      <span class="field-label">Studio Location</span>
+      <div class="location-group">
+        <label class="location-option"><input type="radio" name="location" value="Dubai"><div class="check-box"></div>Dubai</label>
+        <label class="location-option"><input type="radio" name="location" value="Abu Dhabi"><div class="check-box"></div>Abu Dhabi</label>
+        <label class="location-option"><input type="radio" name="location" value="Qatar"><div class="check-box"></div>Qatar</label>
+      </div>
+    </div>
+
+    <div class="section-title">Opening — Studio area (before 10:00, hourly)</div>
+
+    <div class="question-card">
+      <p class="question-text">Clear all dust bins and garbage bins in all locations. Ensure all garbage and cartons from deliveries are thrown following and respecting building management disposal process</p>
+      <div class="yn-group">
+        <label class="yn-option"><input type="radio" name="q1" value="Yes"><div class="yn-dot"></div>Yes</label>
+        <label class="yn-option"><input type="radio" name="q1" value="No"><div class="yn-dot"></div>No</label>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <p class="question-text">Clean the floor with mop and water/disinfecting solution (ensure to remove stains, spots or any dust in all corners of the studio)</p>
+      <div class="yn-group">
+        <label class="yn-option"><input type="radio" name="q2" value="Yes"><div class="yn-dot"></div>Yes</label>
+        <label class="yn-option"><input type="radio" name="q2" value="No"><div class="yn-dot"></div>No</label>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <p class="question-text">Tree leaves to be cleaned daily</p>
+      <div class="yn-group">
+        <label class="yn-option"><input type="radio" name="q3" value="Yes"><div class="yn-dot"></div>Yes</label>
+        <label class="yn-option"><input type="radio" name="q3" value="No"><div class="yn-dot"></div>No</label>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <p class="question-text">Air fragrance device is on always (settings PL17; refill)</p>
+      <div class="yn-group">
+        <label class="yn-option"><input type="radio" name="q4" value="Yes"><div class="yn-dot"></div>Yes</label>
+        <label class="yn-option"><input type="radio" name="q4" value="No"><div class="yn-dot"></div>No</label>
+      </div>
+    </div>
+
+    <div class="section-title">Office / Storage area</div>
+
+    <div class="question-card">
+      <p class="question-text">All supplies and stationery to be organized on the shelves. Personal belongings to be organized in assigned corner</p>
+      <div class="yn-group">
+        <label class="yn-option"><input type="radio" name="q5" value="Yes"><div class="yn-dot"></div>Yes</label>
+        <label class="yn-option"><input type="radio" name="q5" value="No"><div class="yn-dot"></div>No</label>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <p class="question-text">First Aid Kit available (panadol, plaster, bandage, alcohol, sanitizer)</p>
+      <div class="yn-group">
+        <label class="yn-option"><input type="radio" name="q6" value="Yes"><div class="yn-dot"></div>Yes</label>
+        <label class="yn-option"><input type="radio" name="q6" value="No"><div class="yn-dot"></div>No</label>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <p class="question-text">Water to be stored in assigned corner only. Vacuum the carpet</p>
+      <div class="yn-group">
+        <label class="yn-option"><input type="radio" name="q7" value="Yes"><div class="yn-dot"></div>Yes</label>
+        <label class="yn-option"><input type="radio" name="q7" value="No"><div class="yn-dot"></div>No</label>
+      </div>
+    </div>
+
+    <div class="section-title">Reception</div>
+
+    <div class="question-card">
+      <p class="question-text">Dust cleaning (reception table, computer, shelves with placed printing products, table, sofa to arrange nicely)</p>
+      <div class="yn-group">
+        <label class="yn-option"><input type="radio" name="q8" value="Yes"><div class="yn-dot"></div>Yes</label>
+        <label class="yn-option"><input type="radio" name="q8" value="No"><div class="yn-dot"></div>No</label>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <p class="question-text">Light on to create a cozy atmosphere</p>
+      <div class="yn-group">
+        <label class="yn-option"><input type="radio" name="q9" value="Yes"><div class="yn-dot"></div>Yes</label>
+        <label class="yn-option"><input type="radio" name="q9" value="No"><div class="yn-dot"></div>No</label>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <p class="question-text">Chairs/sofas to be brushed, vacuumed and arranged</p>
+      <div class="yn-group">
+        <label class="yn-option"><input type="radio" name="q10" value="Yes"><div class="yn-dot"></div>Yes</label>
+        <label class="yn-option"><input type="radio" name="q10" value="No"><div class="yn-dot"></div>No</label>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <p class="question-text">Garbage bin to be cleaned and placed new bag. Clean the YOU BABY STUDIO logo from dust — make sure it looks tidy</p>
+      <div class="yn-group">
+        <label class="yn-option"><input type="radio" name="q11" value="Yes"><div class="yn-dot"></div>Yes</label>
+        <label class="yn-option"><input type="radio" name="q11" value="No"><div class="yn-dot"></div>No</label>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <p class="question-text">Mobile phone, batteries for camera to be placed on charge</p>
+      <div class="yn-group">
+        <label class="yn-option"><input type="radio" name="q12" value="Yes"><div class="yn-dot"></div>Yes</label>
+        <label class="yn-option"><input type="radio" name="q12" value="No"><div class="yn-dot"></div>No</label>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <p class="question-text">On the table to be placed ONLY: work phones, laptop, credit card machine and stationery items</p>
+      <div class="yn-group">
+        <label class="yn-option"><input type="radio" name="q13" value="Yes"><div class="yn-dot"></div>Yes</label>
+        <label class="yn-option"><input type="radio" name="q13" value="No"><div class="yn-dot"></div>No</label>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <p class="question-text">4 water bottles placed on coffee table</p>
+      <div class="yn-group">
+        <label class="yn-option"><input type="radio" name="q14" value="Yes"><div class="yn-dot"></div>Yes</label>
+        <label class="yn-option"><input type="radio" name="q14" value="No"><div class="yn-dot"></div>No</label>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <p class="question-text">Refill tissue boxes — to be stored in proper tissue wooden box</p>
+      <div class="yn-group">
+        <label class="yn-option"><input type="radio" name="q15" value="Yes"><div class="yn-dot"></div>Yes</label>
+        <label class="yn-option"><input type="radio" name="q15" value="No"><div class="yn-dot"></div>No</label>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <p class="question-text">Make sure the diffuser/fragrance is refilled and working — if no stock, ask to order</p>
+      <div class="yn-group">
+        <label class="yn-option"><input type="radio" name="q16" value="Yes"><div class="yn-dot"></div>Yes</label>
+        <label class="yn-option"><input type="radio" name="q16" value="No"><div class="yn-dot"></div>No</label>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <p class="question-text">All printed products to be displayed and cleaned</p>
+      <div class="yn-group">
+        <label class="yn-option"><input type="radio" name="q17" value="Yes"><div class="yn-dot"></div>Yes</label>
+        <label class="yn-option"><input type="radio" name="q17" value="No"><div class="yn-dot"></div>No</label>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <p class="question-text">Vacuum and clean the floor at the reception area</p>
+      <div class="yn-group">
+        <label class="yn-option"><input type="radio" name="q18" value="Yes"><div class="yn-dot"></div>Yes</label>
+        <label class="yn-option"><input type="radio" name="q18" value="No"><div class="yn-dot"></div>No</label>
+      </div>
+    </div>
+
+    <div class="section-title">Toilet (hourly)</div>
+
+    <div class="question-card">
+      <p class="question-text">Make sure Ritual diffuser is refilled — if no stock, ask to order</p>
+      <div class="yn-group">
+        <label class="yn-option"><input type="radio" name="q19" value="Yes"><div class="yn-dot"></div>Yes</label>
+        <label class="yn-option"><input type="radio" name="q19" value="No"><div class="yn-dot"></div>No</label>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <p class="question-text">Refill hand soap</p>
+      <div class="yn-group">
+        <label class="yn-option"><input type="radio" name="q20" value="Yes"><div class="yn-dot"></div>Yes</label>
+        <label class="yn-option"><input type="radio" name="q20" value="No"><div class="yn-dot"></div>No</label>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <p class="question-text">5 hand towels to be displayed on the tray (small sizes ONLY)</p>
+      <div class="yn-group">
+        <label class="yn-option"><input type="radio" name="q21" value="Yes"><div class="yn-dot"></div>Yes</label>
+        <label class="yn-option"><input type="radio" name="q21" value="No"><div class="yn-dot"></div>No</label>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <p class="question-text">Tissue paper to be replaced in tissue roller box</p>
+      <div class="yn-group">
+        <label class="yn-option"><input type="radio" name="q22" value="Yes"><div class="yn-dot"></div>Yes</label>
+        <label class="yn-option"><input type="radio" name="q22" value="No"><div class="yn-dot"></div>No</label>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <p class="question-text">Toilet paper to be placed</p>
+      <div class="yn-group">
+        <label class="yn-option"><input type="radio" name="q23" value="Yes"><div class="yn-dot"></div>Yes</label>
+        <label class="yn-option"><input type="radio" name="q23" value="No"><div class="yn-dot"></div>No</label>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <p class="question-text">Garbage bin to be cleaned and placed new bag</p>
+      <div class="yn-group">
+        <label class="yn-option"><input type="radio" name="q24" value="Yes"><div class="yn-dot"></div>Yes</label>
+        <label class="yn-option"><input type="radio" name="q24" value="No"><div class="yn-dot"></div>No</label>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <p class="question-text">Toilet seats to be cleaned under the seat and top of the cover</p>
+      <div class="yn-group">
+        <label class="yn-option"><input type="radio" name="q25" value="Yes"><div class="yn-dot"></div>Yes</label>
+        <label class="yn-option"><input type="radio" name="q25" value="No"><div class="yn-dot"></div>No</label>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <p class="question-text">Dust to be cleaned on top of tissue roller box</p>
+      <div class="yn-group">
+        <label class="yn-option"><input type="radio" name="q26" value="Yes"><div class="yn-dot"></div>Yes</label>
+        <label class="yn-option"><input type="radio" name="q26" value="No"><div class="yn-dot"></div>No</label>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <p class="question-text">Mirror to be wiped</p>
+      <div class="yn-group">
+        <label class="yn-option"><input type="radio" name="q27" value="Yes"><div class="yn-dot"></div>Yes</label>
+        <label class="yn-option"><input type="radio" name="q27" value="No"><div class="yn-dot"></div>No</label>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <p class="question-text">None of the cleaning tools to be placed in visible place</p>
+      <div class="yn-group">
+        <label class="yn-option"><input type="radio" name="q28" value="Yes"><div class="yn-dot"></div>Yes</label>
+        <label class="yn-option"><input type="radio" name="q28" value="No"><div class="yn-dot"></div>No</label>
+      </div>
+    </div>
+
+    <div class="section-title">Kitchen area</div>
+
+    <div class="question-card">
+      <p class="question-text">Kitchen cupboard to be cleaned. Make sure the water dispenser is on and there is water in the bottle</p>
+      <div class="yn-group">
+        <label class="yn-option"><input type="radio" name="q29" value="Yes"><div class="yn-dot"></div>Yes</label>
+        <label class="yn-option"><input type="radio" name="q29" value="No"><div class="yn-dot"></div>No</label>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <p class="question-text">Cross check cups, plates — cleaned and no stains left over</p>
+      <div class="yn-group">
+        <label class="yn-option"><input type="radio" name="q30" value="Yes"><div class="yn-dot"></div>Yes</label>
+        <label class="yn-option"><input type="radio" name="q30" value="No"><div class="yn-dot"></div>No</label>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <p class="question-text">No dirty dishes in the sink (all dishes after cleaning to be wiped with dry towel and placed in the cabinet immediately)</p>
+      <div class="yn-group">
+        <label class="yn-option"><input type="radio" name="q31" value="Yes"><div class="yn-dot"></div>Yes</label>
+        <label class="yn-option"><input type="radio" name="q31" value="No"><div class="yn-dot"></div>No</label>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <p class="question-text">Microwave after each use to be switched off</p>
+      <div class="yn-group">
+        <label class="yn-option"><input type="radio" name="q32" value="Yes"><div class="yn-dot"></div>Yes</label>
+        <label class="yn-option"><input type="radio" name="q32" value="No"><div class="yn-dot"></div>No</label>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <p class="question-text">After each food warming to refresh the kitchen with air freshener</p>
+      <div class="yn-group">
+        <label class="yn-option"><input type="radio" name="q33" value="Yes"><div class="yn-dot"></div>Yes</label>
+        <label class="yn-option"><input type="radio" name="q33" value="No"><div class="yn-dot"></div>No</label>
+      </div>
+    </div>
+
+    <div class="section-title">During shift</div>
+
+    <div class="question-card">
+      <p class="question-text">Check laundry bag and wash dirty clothes (12:00–15:00)</p>
+      <div class="yn-group">
+        <label class="yn-option"><input type="radio" name="q34" value="Yes"><div class="yn-dot"></div>Yes</label>
+        <label class="yn-option"><input type="radio" name="q34" value="No"><div class="yn-dot"></div>No</label>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <p class="question-text">Iron clothes from previous day</p>
+      <div class="yn-group">
+        <label class="yn-option"><input type="radio" name="q35" value="Yes"><div class="yn-dot"></div>Yes</label>
+        <label class="yn-option"><input type="radio" name="q35" value="No"><div class="yn-dot"></div>No</label>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <p class="question-text">Refresh suitcases: wash dirty backgrounds and outfits, steam remaining clothes and backgrounds, steam toys, pillows, beans</p>
+      <div class="yn-group">
+        <label class="yn-option"><input type="radio" name="q36" value="Yes"><div class="yn-dot"></div>Yes</label>
+        <label class="yn-option"><input type="radio" name="q36" value="No"><div class="yn-dot"></div>No</label>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <p class="question-text">Packing suitcases for next day home services. Cross check schedule and prepare balloon setup (15:00–20:00)</p>
+      <div class="yn-group">
+        <label class="yn-option"><input type="radio" name="q37" value="Yes"><div class="yn-dot"></div>Yes</label>
+        <label class="yn-option"><input type="radio" name="q37" value="No"><div class="yn-dot"></div>No</label>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <p class="question-text">Finalize schedule and share with Customer Coordinator (16:00–17:00)</p>
+      <div class="yn-group">
+        <label class="yn-option"><input type="radio" name="q38" value="Yes"><div class="yn-dot"></div>Yes</label>
+        <label class="yn-option"><input type="radio" name="q38" value="No"><div class="yn-dot"></div>No</label>
+      </div>
+    </div>
+
+    <div class="section-title">Closing — 17:00 till 21:00</div>
+
+    <div class="question-card">
+      <p class="question-text">Unpack suitcases and props from the day and arrange them to assigned place</p>
+      <div class="yn-group">
+        <label class="yn-option"><input type="radio" name="q39" value="Yes"><div class="yn-dot"></div>Yes</label>
+        <label class="yn-option"><input type="radio" name="q39" value="No"><div class="yn-dot"></div>No</label>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <p class="question-text">Cross check all props and verify if nothing is damaged. If yes, create incident report</p>
+      <div class="yn-group">
+        <label class="yn-option"><input type="radio" name="q40" value="Yes"><div class="yn-dot"></div>Yes</label>
+        <label class="yn-option"><input type="radio" name="q40" value="No"><div class="yn-dot"></div>No</label>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <p class="question-text">Cake Smash &amp; Newborn props and outfits must be washed immediately and removed from washing machine to dry for the next day</p>
+      <div class="yn-group">
+        <label class="yn-option"><input type="radio" name="q41" value="Yes"><div class="yn-dot"></div>Yes</label>
+        <label class="yn-option"><input type="radio" name="q41" value="No"><div class="yn-dot"></div>No</label>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <p class="question-text">Reassure all switches are off, chargers removed from sockets across all the studio (do not leave anything switched on or on charge overnight)</p>
+      <div class="yn-group">
+        <label class="yn-option"><input type="radio" name="q42" value="Yes"><div class="yn-dot"></div>Yes</label>
+        <label class="yn-option"><input type="radio" name="q42" value="No"><div class="yn-dot"></div>No</label>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <p class="question-text">AC, PC, lights are turned OFF before leaving</p>
+      <div class="yn-group">
+        <label class="yn-option"><input type="radio" name="q43" value="Yes"><div class="yn-dot"></div>Yes</label>
+        <label class="yn-option"><input type="radio" name="q43" value="No"><div class="yn-dot"></div>No</label>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <p class="question-text">Clean studio before leaving: garbage bin to be cleaned and replaced with new bag, vacuum the floor</p>
+      <div class="yn-group">
+        <label class="yn-option"><input type="radio" name="q44" value="Yes"><div class="yn-dot"></div>Yes</label>
+        <label class="yn-option"><input type="radio" name="q44" value="No"><div class="yn-dot"></div>No</label>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <p class="question-text">All props are placed back to their places</p>
+      <div class="yn-group">
+        <label class="yn-option"><input type="radio" name="q45" value="Yes"><div class="yn-dot"></div>Yes</label>
+        <label class="yn-option"><input type="radio" name="q45" value="No"><div class="yn-dot"></div>No</label>
+      </div>
+    </div>
+
+    <div class="section-title">Photo Attach</div>
+    <div class="card">
+      <span class="field-label">Photo Attach</span>
+      <div class="upload-zone" id="uploadZone">
+        <input type="file" id="photoInput" accept="image/*" multiple>
+        <div class="upload-icon">📎</div>
+        <p class="upload-text">Choose File(s)</p>
+        <p class="upload-hint">JPG, PNG, HEIC — multiple files allowed</p>
+      </div>
+      <div class="file-list" id="fileList"></div>
+    </div>
+
+    <div class="notice">Customer Coordinator is responsible for the full appearance of the studio and check list follow up</div>
+
+    <div class="error-msg" id="errorMsg">Please fill in all required fields before submitting.</div>
+    <button class="submit-btn" id="submitBtn" onclick="submitForm()">Submit</button>
+  </div>
+
+  <div class="success-screen" id="successScreen">
+    <div class="success-icon">✓</div>
+    <h2>Checklist Submitted</h2>
+    <p>Thank you. Your checklist has been saved successfully.</p>
+  </div>
+</div>
+
+<script>
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyke8QiER3OMio_p1OBHNXT2qcjon9PeYkClreKMOD_tL85_363H6zwyERYk_i1sJ3yjA/exec';
+
+  let selectedFiles = [];
+
+  document.getElementById('photoInput').addEventListener('change', function(e) {
+    Array.from(e.target.files).forEach(f => {
+      if (!selectedFiles.find(sf => sf.name === f.name && sf.size === f.size)) selectedFiles.push(f);
+    });
+    renderFileList();
+  });
+
+  function renderFileList() {
+    const list = document.getElementById('fileList');
+    list.innerHTML = '';
+    selectedFiles.forEach((f, i) => {
+      const item = document.createElement('div');
+      item.className = 'file-item';
+      item.innerHTML = `<span>📷 ${f.name}</span><span class="file-remove" onclick="removeFile(${i})">×</span>`;
+      list.appendChild(item);
+    });
+  }
+
+  function removeFile(i) { selectedFiles.splice(i, 1); renderFileList(); }
+
+  async function submitForm() {
+    const btn = document.getElementById('submitBtn');
+    const errorMsg = document.getElementById('errorMsg');
+    errorMsg.classList.remove('show');
+
+    const date = document.getElementById('date').value;
+    const staffName = document.getElementById('staffName').value.trim();
+    const location = document.querySelector('input[name="location"]:checked');
+    const qNames = ['q1','q2','q3','q4','q5','q6','q7','q8','q9','q10','q11','q12','q13','q14','q15','q16','q17','q18','q19','q20','q21','q22','q23','q24','q25','q26','q27','q28','q29','q30','q31','q32','q33','q34','q35','q36','q37','q38','q39','q40','q41','q42','q43','q44','q45'];
+    const answers = {};
+    let allAnswered = true;
+
+    qNames.forEach(q => {
+      const val = document.querySelector(`input[name="${q}"]:checked`);
+      if (!val) allAnswered = false;
+      else answers[q] = val.value;
+    });
+
+    if (!date || !staffName || !location || !allAnswered) {
+      errorMsg.classList.add('show');
+      errorMsg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Submitting…';
+
+    const photoData = [];
+    for (const file of selectedFiles) {
+      const b64 = await toBase64(file);
+      photoData.push({ name: file.name, data: b64, type: file.type });
+    }
+
+    const payload = { date, staffName, location: location.value, answers, photos: photoData };
+
+    try {
+      await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+      document.getElementById('formWrap').classList.add('hidden');
+      document.getElementById('successScreen').classList.add('show');
+    } catch (err) {
+      btn.disabled = false;
+      btn.textContent = 'Submit';
+      errorMsg.textContent = 'Submission failed. Please check your connection and try again.';
+      errorMsg.classList.add('show');
+    }
+  }
+
+  function toBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+</script>
+</body>
+</html>
